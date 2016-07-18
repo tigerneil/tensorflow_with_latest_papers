@@ -7,7 +7,9 @@ Currently Implemented Papers:
 * Highway Networks
 * Recurrent Highway Networks
 * Multiplicative Integration Within RNNs
+* Recurrent Dropout
 * GRU Mutants
+
 
 More Papers to come as they are published. If you have any requests, please use the issues section. 
 
@@ -76,6 +78,29 @@ cell = rnn_cell_mulint_modern.HighwayRNNCell_MulInt(num_units, num_highway_layer
 ```
 
 
+### Recurrent Dropout Without Memory Loss
+
+http://arxiv.org/pdf/1603.05118v1.pdf
+
+Implement recurrent dropout within multiplicative integration rnn cells. Will allow rnn cell's memory to be more versatile. 
+
+```python
+import rnn_cell_mulint_modern
+
+#be sure to change recurrent_dropout_value to 1.0 during testing or validation
+#alternatively, you can set the is_training argument to False during testing or validation but this requires the reconstruction of the model
+
+cell = rnn_cell_mulint_modern.BasicLSTMCell_MulInt(num_units, use_recurrent_dropout = True, recurrent_dropout_value = 0.90)
+#OR
+cell = rnn_cell_mulint_modern.GRUCell_MulInt(num_units,  use_recurrent_dropout = True, recurrent_dropout_value = 0.90)
+#OR
+cell = rnn_cell_mulint_modern.BasicLSTMCell_MulInt(num_units, use_recurrent_dropout = True, recurrent_dropout_value = 0.90)
+#OR
+cell = rnn_cell_mulint_modern.HighwayRNNCell_MulInt(num_units, num_highway_layers = 3,  use_recurrent_dropout = True, recurrent_dropout_value = 0.90)
+
+```
+
+
 ### GRU Mutants
 
 http://www.jmlr.org/proceedings/papers/v37/jozefowicz15.pdf
@@ -83,6 +108,8 @@ http://www.jmlr.org/proceedings/papers/v37/jozefowicz15.pdf
 Mutants of GRU that may work better in different scenarios:
 
 ```python
+import rnn_cell_mulint_modern
+
 cell = rnn_cell_modern.JZS1Cell(num_units)
 #Or
 cell = rnn_cell_modern.JZS2Cell(num_units)

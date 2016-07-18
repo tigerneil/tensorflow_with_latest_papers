@@ -47,10 +47,14 @@ class BasicRNNCell_MulInt(RNNCell):
 class GRUCell_MulInt(RNNCell):
   """Gated Recurrent Unit cell (cf. http://arxiv.org/abs/1406.1078)."""
 
-  def __init__(self, num_units, gpu_for_layer = 0, weight_initializer = "uniform_unit", orthogonal_scale_factor = 1.1, use_highway = False, num_highway_layers = 2):
+  def __init__(self, num_units, gpu_for_layer = 0, weight_initializer = "uniform_unit", orthogonal_scale_factor = 1.1, use_highway = False, num_highway_layers = 2,
+    use_recurrent_dropout = False, recurrent_dropout_factor = 0.90, is_training = True):
     self._num_units = num_units
     self._gpu_for_layer = gpu_for_layer 
     self._weight_initializer = weight_initializer
+    self.use_recurrent_dropout = use_recurrent_dropout
+    self.recurrent_dropout_factor = recurrent_dropout_factor
+    self.is_training = is_training
 
   @property
   def input_size(self):
@@ -76,7 +80,12 @@ class GRUCell_MulInt(RNNCell):
         #notice they have the activation/non-linear step right here! 
         c = tf.tanh(multiplicative_integration([inputs, state], self._num_units, 0.0))
 
-      new_h = u * state + (1 - u) * c
+        if self.use_recurrent_dropout and self.is_training:
+          input_contribution = tf.nn.dropout(c, self.recurrent_dropout_factor)
+        else:
+          input_contribution = c
+
+      new_h = u * state + (1 - u) * input_contribution
 
     return new_h, new_h
 
@@ -93,7 +102,8 @@ class BasicLSTMCell_MulInt(RNNCell):
   the scale of forgetting in the beginning of the training.
   """
 
-  def __init__(self, num_units, forget_bias = 1.0, gpu_for_layer = 0, weight_initializer = "uniform_unit", orthogonal_scale_factor = 1.1, use_highway = False, num_highway_layers = 2):
+  def __init__(self, num_units, forget_bias = 1.0, gpu_for_layer = 0, weight_initializer = "uniform_unit", orthogonal_scale_factor = 1.1, use_highway = False, num_highway_layers = 2,
+    use_recurrent_dropout = False, recurrent_dropout_factor = 0.90, is_training = True):
     self._num_units = num_units
     self._gpu_for_layer = gpu_for_layer 
     self._weight_initializer = weight_initializer
@@ -101,6 +111,9 @@ class BasicLSTMCell_MulInt(RNNCell):
     self._forget_bias = forget_bias
     self.use_highway = use_highway
     self.num_highway_layers = num_highway_layers
+    self.use_recurrent_dropout = use_recurrent_dropout
+    self.recurrent_dropout_factor = recurrent_dropout_factor
+    self.is_training = is_training
 
   @property
   def input_size(self):
@@ -126,19 +139,29 @@ class BasicLSTMCell_MulInt(RNNCell):
         # i = input_gate, j = new_input, f = forget_gate, o = output_gate
         i, j, f, o = tf.split(1, 4, concat)
 
-        new_c = c * tf.sigmoid(f + self._forget_bias) + tf.sigmoid(i) * tf.tanh(j)
+        if self.use_recurrent_dropout and self.is_training:
+          input_contribution = tf.nn.dropout(tf.tanh(j), self.recurrent_dropout_factor)
+        else:
+          input_contribution = tf.tanh(j)
+
+        new_c = c * tf.sigmoid(f + self._forget_bias) + tf.sigmoid(i) * input_contribution
         new_h = tf.tanh(new_c) * tf.sigmoid(o)
     
       return new_h, tf.concat(1, [new_h, new_c]) #purposely reversed
 
 
 
+
+
 class HighwayRNNCell_MulInt(RNNCell):
   """Highway RNN Network with multiplicative_integration"""
 
-  def __init__(self, num_units, num_highway_layers = 3):
+  def __init__(self, num_units, num_highway_layers = 3, use_recurrent_dropout = False, recurrent_dropout_factor = 0.90, is_training = True):
     self._num_units = num_units
     self.num_highway_layers = num_highway_layers
+    self.use_recurrent_dropout = use_recurrent_dropout
+    self.recurrent_dropout_factor = recurrent_dropout_factor
+    self.is_training = is_training
 
   @property
   def input_size(self):
@@ -163,6 +186,9 @@ class HighwayRNNCell_MulInt(RNNCell):
         gate_for_highway_factor = tf.sigmoid(multiplicative_integration([inputs, current_state], self._num_units, initial_bias_value = -3.0))
 
         gate_for_hidden_factor = 1 - gate_for_highway_factor
+
+        if self.use_recurrent_dropout and self.is_training:
+          highway_factor = tf.nn.dropout(highway_factor, self.recurrent_dropout_factor)
 
       current_state = highway_factor * gate_for_highway_factor + current_state * gate_for_hidden_factor
 
