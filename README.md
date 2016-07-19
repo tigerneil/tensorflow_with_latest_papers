@@ -37,6 +37,7 @@ https://arxiv.org/abs/1505.00387
 
 Allows greater depth of neural network freely without penalty from upper layers. Ensures shortcut connections within deeper layers.
 
+Note, there is an optional flag `use_inputs_on_each_layer` that is boolean. Turning this option to False saves network parameters but also may not yield most optimal results. If you would like to replicate the paper, leave this option as False.
 ```python
 import highway_networks_modern
 
