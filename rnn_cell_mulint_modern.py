@@ -156,12 +156,13 @@ class BasicLSTMCell_MulInt(RNNCell):
 class HighwayRNNCell_MulInt(RNNCell):
   """Highway RNN Network with multiplicative_integration"""
 
-  def __init__(self, num_units, num_highway_layers = 3, use_recurrent_dropout = False, recurrent_dropout_factor = 0.90, is_training = True):
+  def __init__(self, num_units, num_highway_layers = 3, use_recurrent_dropout = False, recurrent_dropout_factor = 0.90, is_training = True, use_inputs_on_each_layer = False):
     self._num_units = num_units
     self.num_highway_layers = num_highway_layers
     self.use_recurrent_dropout = use_recurrent_dropout
     self.recurrent_dropout_factor = recurrent_dropout_factor
     self.is_training = is_training
+    self.use_inputs_on_each_layer = use_inputs_on_each_layer
 
   @property
   def input_size(self):
@@ -181,9 +182,16 @@ class HighwayRNNCell_MulInt(RNNCell):
     current_state = state
     for highway_layer in xrange(self.num_highway_layers):
       with tf.variable_scope('highway_factor_'+str(highway_layer)):
-        highway_factor = tf.tanh(multiplicative_integration([inputs, current_state], self._num_units))
+        if self.use_inputs_on_each_layer or highway_layer == 0:
+          highway_factor = tf.tanh(multiplicative_integration([inputs, current_state], self._num_units))
+        else:
+          highway_factor = tf.tanh(linear([current_state], self._num_units, True))
+
       with tf.variable_scope('gate_for_highway_factor_'+str(highway_layer)):
-        gate_for_highway_factor = tf.sigmoid(multiplicative_integration([inputs, current_state], self._num_units, initial_bias_value = -3.0))
+        if self.use_inputs_on_each_layer or highway_layer == 0:
+          gate_for_highway_factor = tf.sigmoid(multiplicative_integration([inputs, current_state], self._num_units, initial_bias_value = -3.0))
+        else:
+          gate_for_highway_factor = tf.sigmoid(linear([current_state], self._num_units, True, -3.0))
 
         gate_for_hidden_factor = 1 - gate_for_highway_factor
 

@@ -15,12 +15,12 @@ More Papers to come as they are published. If you have any requests, please use 
 
 ###Contact Information:
 
-skype: lea vesbr eat he (eliminate all spaces)
+skype: lea vesbr eat he thisisjunk(eliminate all spaces and ignore junk part)
 
-email: sh a hn s [at ] m ail.u c.ed u (eliminate all spaces)
+email: sh a hn s [at ] m ail.u c.ed u thisisjunk(eliminate all spaces and ignore junk part)
 
 
-### Testing These New Papers
+### To Test These New Papers
 
 If you would like to test these new features, you can:
 
@@ -108,7 +108,7 @@ http://www.jmlr.org/proceedings/papers/v37/jozefowicz15.pdf
 Mutants of GRU that may work better in different scenarios:
 
 ```python
-import rnn_cell_mulint_modern
+import rnn_cell_modern
 
 cell = rnn_cell_modern.JZS1Cell(num_units)
 #Or
