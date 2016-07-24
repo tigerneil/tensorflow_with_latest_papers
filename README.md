@@ -114,11 +114,11 @@ Note: It seems that the GRU implementation does not converge currently. I've fou
 ```python
 import rnn_cell_mulint_layernorm_modern
 
-rnn_cell = rnn_cell_mulint_layernorm_modern.BasicLSTMCell_LayerNorm(size)
+rnn_cell = rnn_cell_layernorm_modern.BasicLSTMCell_LayerNorm(size)
 #OR
-rnn_cell = rnn_cell_mulint_layernorm_modern.GRUCell_LayerNorm(size)
+rnn_cell = rnn_cell_layernorm_modern.GRUCell_LayerNorm(size)
 #OR
-rnn_cell = rnn_cell_mulint_layernorm_modern.HighwayRNNCell_LayerNorm(size)
+rnn_cell = rnn_cell_layernorm_modern.HighwayRNNCell_LayerNorm(size)
 ```
 
 ### Layer Normalization & Multiplicative Integration
