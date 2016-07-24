@@ -62,7 +62,8 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow.models.rnn.ptb import reader
-import rnn_cell_modern, rnn_cell_mulint_modern
+import rnn_cell_modern, rnn_cell_mulint_modern, rnn_cell_mulint_layernorm_modern
+import rnn_cell_layernorm_modern
 
 flags = tf.flags
 logging = tf.logging
@@ -93,8 +94,13 @@ class PTBModel(object):
     # rnn_cell = rnn_cell_mulint_modern.BasicRNNCell_MulInt(size)
     # rnn_cell = rnn_cell_mulint_modern.GRUCell_MulInt(size)
     # rnn_cell = rnn_cell_mulint_modern.BasicLSTMCell_MulInt(size)
-    rnn_cell = rnn_cell_mulint_modern.HighwayRNNCell_MulInt(size)
-
+    # rnn_cell = rnn_cell_mulint_modern.HighwayRNNCell_MulInt(size)
+    # rnn_cell = rnn_cell_mulint_layernorm_modern.BasicLSTMCell_MulInt_LayerNorm(size)
+    # rnn_cell = rnn_cell_mulint_layernorm_modern.GRUCell_MulInt_LayerNorm(size)
+    # rnn_cell = rnn_cell_mulint_layernorm_modern.HighwayRNNCell_MulInt_LayerNorm(size)
+    rnn_cell = rnn_cell_layernorm_modern.BasicLSTMCell_LayerNorm(size)
+    # rnn_cell = rnn_cell_layernorm_modern.GRUCell_LayerNorm(size)
+    # rnn_cell = rnn_cell_layernorm_modern.HighwayRNNCell_LayerNorm(size)
 
 
     if is_training and config.keep_prob < 1:
@@ -147,7 +153,7 @@ class PTBModel(object):
     tvars = tf.trainable_variables()
     grads, _ = tf.clip_by_global_norm(tf.gradients(cost, tvars),
                                       config.max_grad_norm)
-    optimizer = tf.train.GradientDescentOptimizer(self.lr)
+    # optimizer = tf.train.GradientDescentOptimizer(self.lr)
     optimizer = tf.train.AdamOptimizer(self.lr)
 
     self._train_op = optimizer.apply_gradients(zip(grads, tvars))

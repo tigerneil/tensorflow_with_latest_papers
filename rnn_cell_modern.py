@@ -50,6 +50,8 @@ class HighwayRNNCell(RNNCell):
         else:
           gate_for_highway_factor = tf.sigmoid(linear([current_state], self._num_units, True, -3.0))
 
+        gate_for_hidden_factor = 1.0 - gate_for_highway_factor
+
       current_state = highway_factor * gate_for_highway_factor + current_state * gate_for_hidden_factor
 
     return current_state, current_state

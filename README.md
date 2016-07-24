@@ -8,6 +8,8 @@ Currently Implemented Papers:
 * Recurrent Highway Networks
 * Multiplicative Integration Within RNNs
 * Recurrent Dropout
+* Layer Normalization
+* Layer Normalization & Multiplicative Integration
 * GRU Mutants
 
 
@@ -101,6 +103,40 @@ cell = rnn_cell_mulint_modern.HighwayRNNCell_MulInt(num_units, num_highway_layer
 
 ```
 
+
+### Layer Normalization
+http://arxiv.org/abs/1607.06450
+
+Layer normalization promises faster convergence and lower perplexities. With layer normalization you do not need to change any settings if you're training or testing.
+
+Note: It seems that the GRU implementation does not converge currently. I've found that it does converge if you only apply LN terms to the first two r and u matrices. 
+
+```python
+import rnn_cell_mulint_layernorm_modern
+
+rnn_cell = rnn_cell_mulint_layernorm_modern.BasicLSTMCell_LayerNorm(size)
+#OR
+rnn_cell = rnn_cell_mulint_layernorm_modern.GRUCell_LayerNorm(size)
+#OR
+rnn_cell = rnn_cell_mulint_layernorm_modern.HighwayRNNCell_LayerNorm(size)
+```
+
+### Layer Normalization & Multiplicative Integration
+http://arxiv.org/abs/1607.06450
+
+Layer normalization is currently implemented within a multiplicative integration context. If there are requests for a vanilla implementation for layer normalization please let me know. With layer normalization you do not need to change any settings if you're training or testing.
+
+As a warning, this implementation is experimental and may not produce favorable training results.
+
+```python
+import rnn_cell_mulint_layernorm_modern
+
+rnn_cell = rnn_cell_mulint_layernorm_modern.BasicLSTMCell_MulInt_LayerNorm(size)
+#OR
+rnn_cell = rnn_cell_mulint_layernorm_modern.GRUCell_MulInt_LayerNorm(size)
+#OR
+rnn_cell = rnn_cell_mulint_layernorm_modern.HighwayRNNCell_MulInt_LayerNorm(size)
+```
 
 ### GRU Mutants
 
