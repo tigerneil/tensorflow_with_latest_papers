@@ -11,6 +11,7 @@ import tensorflow as tf
 from tensorflow.python.ops.nn import rnn_cell
 import highway_network_modern
 from multiplicative_integration_modern import multiplicative_integration
+from normalization_ops_modern import layer_norm
 
 from linear_modern import linear
 
@@ -68,13 +69,15 @@ class LSTMCell_MemoryArray(RNNCell):
 
   """
 
-  def __init__(self, num_units, num_memory_arrays = 2, use_multiplicative_integration = True, use_recurrent_dropout = False, recurrent_dropout_factor = 0.90, is_training = True, forget_bias = 1.0):
+  def __init__(self, num_units, num_memory_arrays = 2, use_multiplicative_integration = True, use_recurrent_dropout = False, recurrent_dropout_factor = 0.90, is_training = True, forget_bias = 1.0,
+    use_layer_normalization = False):
     self._num_units = num_units
     self.num_memory_arrays = num_memory_arrays
     self.use_multiplicative_integration = use_multiplicative_integration
     self.use_recurrent_dropout = use_recurrent_dropout
     self.recurrent_dropout_factor = recurrent_dropout_factor
     self.is_training = is_training
+    self.use_layer_normalization = use_layer_normalization
     self._forget_bias = forget_bias
 
 
@@ -105,6 +108,8 @@ class LSTMCell_MemoryArray(RNNCell):
       else:
         concat = linear([inputs, h], self._num_units * 4 * self.num_memory_arrays, True)
 
+      if self.use_layer_normalization: concat = layer_norm(concat, num_variables_in_tensor = 4 * self.num_memory_arrays)
+
       # i = input_gate, j = new_input, f = forget_gate, o = output_gate -- comes in sets of fours
       all_vars_list = tf.split(1, 4 * self.num_memory_arrays, concat)
 
@@ -123,7 +128,12 @@ class LSTMCell_MemoryArray(RNNCell):
 
         new_c_list.append(c_list[array_counter] * tf.sigmoid(f + self._forget_bias) + tf.sigmoid(i) * input_contribution)
 
-        new_h_list.append(tf.tanh(new_c_list[-1]) * tf.sigmoid(o))
+        if self.use_layer_normalization: 
+          new_c = layer_norm(new_c_list[-1])
+        else:
+          new_c = new_c_list[-1]
+          
+        new_h_list.append(tf.tanh(new_c) * tf.sigmoid(o))
 
       '''sum all new_h components -- I'm surprised that there is no division by num_memory_arrays'''
       new_h = tf.add_n(new_h_list)

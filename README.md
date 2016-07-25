@@ -140,6 +140,7 @@ rnn_cell = rnn_cell_mulint_layernorm_modern.HighwayRNNCell_MulInt_LayerNorm(size
 ```
 
 ### LSTM With Multiple Memory Arrays
+
 Implementation of Recurrent Memory Array Structures Kamil Rocki
 https://arxiv.org/abs/1607.03085
 
@@ -150,13 +151,13 @@ When using this type of cell, it is recommended to only use one single layer and
 Within this implementation you can also choose to use or not use:
 - multiplicative integration
 - recurrent dropout
+- layer normalization
 
 ```python
 import rnn_cell_modern
 
 rnn_cell = rnn_cell_modern.LSTMCell_MemoryArray(size, num_memory_arrays = 2, 
-	use_multiplicative_integration = True, use_recurrent_dropout = False)
-
+	use_multiplicative_integration = True, use_recurrent_dropout = False, use_layer_normalization = False)
 ```
 
 
