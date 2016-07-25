@@ -153,6 +153,8 @@ Within this implementation you can also choose to use or not use:
 - recurrent dropout
 - layer normalization
 
+I have found multiplicative integration to help and have not extensively tested the other options.
+
 ```python
 import rnn_cell_modern
 
