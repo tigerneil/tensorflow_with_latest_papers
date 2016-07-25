@@ -10,6 +10,7 @@ Currently Implemented Papers:
 * Recurrent Dropout
 * Layer Normalization
 * Layer Normalization & Multiplicative Integration
+* LSTM With Multiple Memory Arrays
 * GRU Mutants
 
 
@@ -137,6 +138,27 @@ rnn_cell = rnn_cell_mulint_layernorm_modern.GRUCell_MulInt_LayerNorm(size)
 #OR
 rnn_cell = rnn_cell_mulint_layernorm_modern.HighwayRNNCell_MulInt_LayerNorm(size)
 ```
+
+### LSTM With Multiple Memory Arrays
+Implementation of Recurrent Memory Array Structures Kamil Rocki
+https://arxiv.org/abs/1607.03085
+
+Idea is to build more complex memory structures within one single layer rather than stacking multiple layers of RNNs.
+
+When using this type of cell, it is recommended to only use one single layer and then increase the number of memory cells. 
+
+Within this implementation you can also choose to use or not use:
+- multiplicative integration
+- recurrent dropout
+
+```python
+import rnn_cell_modern
+
+rnn_cell = rnn_cell_modern.LSTMCell_MemoryArray(size, num_memory_arrays = 2, 
+	use_multiplicative_integration = True, use_recurrent_dropout = False)
+
+```
+
 
 ### GRU Mutants
 

@@ -10,6 +10,8 @@ import tensorflow as tf
 
 from tensorflow.python.ops.nn import rnn_cell
 import highway_network_modern
+from multiplicative_integration_modern import multiplicative_integration
+
 from linear_modern import linear
 
 RNNCell = rnn_cell.RNNCell
@@ -55,6 +57,84 @@ class HighwayRNNCell(RNNCell):
       current_state = highway_factor * gate_for_highway_factor + current_state * gate_for_hidden_factor
 
     return current_state, current_state
+
+
+
+class LSTMCell_MemoryArray(RNNCell):
+  """Implementation of Recurrent Memory Array Structures Kamil Rocki
+  https://arxiv.org/abs/1607.03085
+
+  Idea is to build more complex memory structures within one single layer rather than stacking multiple layers of RNNs
+
+  """
+
+  def __init__(self, num_units, num_memory_arrays = 2, use_multiplicative_integration = True, use_recurrent_dropout = False, recurrent_dropout_factor = 0.90, is_training = True, forget_bias = 1.0):
+    self._num_units = num_units
+    self.num_memory_arrays = num_memory_arrays
+    self.use_multiplicative_integration = use_multiplicative_integration
+    self.use_recurrent_dropout = use_recurrent_dropout
+    self.recurrent_dropout_factor = recurrent_dropout_factor
+    self.is_training = is_training
+    self._forget_bias = forget_bias
+
+
+  @property
+  def input_size(self):
+    return self._num_units
+
+  @property
+  def output_size(self):
+    return self._num_units
+
+  @property
+  def state_size(self):
+    return self._num_units * (self.num_memory_arrays + 1)
+
+  def __call__(self, inputs, state, timestep = 0, scope=None):
+    with tf.variable_scope(scope or type(self).__name__):  # "BasicLSTMCell"
+      # Parameters of gates are concatenated into one multiply for efficiency.
+      hidden_state_plus_c_list = tf.split(1, self.num_memory_arrays + 1, state)
+
+      h = hidden_state_plus_c_list[0]
+      c_list = hidden_state_plus_c_list[1:]
+
+      '''very large matrix multiplication to speed up procedure -- will split variables out later'''
+      
+      if self.use_multiplicative_integration:
+        concat = multiplicative_integration([inputs, h], self._num_units * 4 * self.num_memory_arrays, 0.0)
+      else:
+        concat = linear([inputs, h], self._num_units * 4 * self.num_memory_arrays, True)
+
+      # i = input_gate, j = new_input, f = forget_gate, o = output_gate -- comes in sets of fours
+      all_vars_list = tf.split(1, 4 * self.num_memory_arrays, concat)
+
+      new_c_list, new_h_list = [], []
+      for array_counter in xrange(self.num_memory_arrays):
+
+        i = all_vars_list[0 + array_counter * 4]
+        j = all_vars_list[1 + array_counter * 4]
+        f = all_vars_list[2 + array_counter * 4]
+        o = all_vars_list[3 + array_counter * 4]
+
+        if self.use_recurrent_dropout and self.is_training:
+          input_contribution = tf.nn.dropout(tf.tanh(j), self.recurrent_dropout_factor)
+        else:
+          input_contribution = tf.tanh(j) 
+
+        new_c_list.append(c_list[array_counter] * tf.sigmoid(f + self._forget_bias) + tf.sigmoid(i) * input_contribution)
+
+        new_h_list.append(tf.tanh(new_c_list[-1]) * tf.sigmoid(o))
+
+      '''sum all new_h components -- I'm surprised that there is no division by num_memory_arrays'''
+      new_h = tf.add_n(new_h_list)
+  
+    return new_h, tf.concat(1, [new_h] + new_c_list) #purposely reversed
+
+
+
+
+
+
 
 
 class JZS1Cell(RNNCell):
