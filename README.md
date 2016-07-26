@@ -113,7 +113,7 @@ Layer normalization promises faster convergence and lower perplexities. With lay
 Note: It seems that the GRU implementation does not converge currently. I've found that it does converge if you only apply LN terms to the first two r and u matrices. 
 
 ```python
-import rnn_cell_mulint_layernorm_modern
+import rnn_cell_layernorm_modern
 
 rnn_cell = rnn_cell_layernorm_modern.BasicLSTMCell_LayerNorm(size)
 #OR
